@@ -1,47 +1,52 @@
-from __future__ import print_function
 import rcon.rcon
 import socket
-from struct import pack, unpack
+import asyncore
 import threading
 
-LISTEN_HOST = 'localhost'
-LISTEN_PORT = 21026
+HOST = 'localhost'
+PORT = 21026
 
-class RconServer(threading.Thread):
-    def __init__(self):
-        threading.Thread.__init__(self)
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.sock.bind((LISTEN_HOST, LISTEN_PORT))
-        self.sock.listen(1)
-
-    def run(self):
-        while 1:
-            client, addr = self.sock.accept()   
-            handler = {
+class RconHandler(asyncore.dispatcher_with_send):
+    def handle_read(self):
+        handler = {
             rcon.SERVERDATA_AUTH: self.handle_auth,
             rcon.SERVERDATA_EXECCOMMAND: self.handle_cmd
-            }
-            packet = rcon.receive_packet(client)
-            handler[packet.type](client, packet)
-            client.close()
-        self.sock.close()
+        }
+        packet = rcon.receive_packet(self)
+        handler[packet.type](packet)
 
-    def handle_auth(self, client, packet):
+    def handle_auth(self, packet):
         empty_pack = rcon.make_buf(rcon.SERVERDATA_RESPONSE_VALUE, packet.id, '')
-        print(empty_pack)
         auth_pack = rcon.make_buf(rcon.SERVERDATA_AUTH_RESPONSE, packet.id, '')
-        print(auth_pack)
-        client.send(empty_pack)
-        client.send(auth_pack)
+        self.send(empty_pack)
+        self.send(auth_pack)
 
-    def handle_cmd(self):
+    def handle_cmd(self, packet):
         resp_pack = rcon.make_buf(rcon.SERVERDATA_RESPONSE_VALUE, packet.id, 'test response')
+        self.send(resp_pack)
 
 
-def main():
-    server = RconServer()
-    server.run()
+class RconServer(asyncore.dispatcher):
+    def __init__(self):
+        asyncore.dispatcher.__init__(self)
+        self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.set_reuse_addr()
+        self.bind((HOST, PORT))
+        self.listen(5)
+
+    def handle_accept(self):
+        pair = self.accept()
+        if pair is not None:
+            client, addr = pair
+            handler = RconHandler(client)
+
+    def run(self):
+        self.thread = threading.Thread(target=asyncore.loop)
+        self.thread.start()
+
+    def stop(self):
+        self.close()
+        self.thread.join()
 
 if __name__ == '__main__':
-    main()
+    run()

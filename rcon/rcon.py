@@ -5,9 +5,6 @@ import struct
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-SERVER = ('', 21026)
-PASS = ''
-
 DEFAULT_CLIENT_ID = 42
 
 SERVERDATA_AUTH = 3
@@ -35,6 +32,9 @@ class Rcon:
     def send(self, command):
         packet = send(self.sock, self.client_id, command)
         return packet.body
+
+    def close(self):
+        self.sock.close()
 
 def send(sock, client_id, command):
     sock.send(make_buf(SERVERDATA_EXECCOMMAND, client_id, command))
