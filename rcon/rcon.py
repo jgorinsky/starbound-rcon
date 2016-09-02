@@ -69,7 +69,7 @@ def receive_packet(s):
 
 def make_buf(type, client_id, body):
     length = len(body)
-    return struct.pack(PACKET_FMT.format(length + 1), 10 + length, client_id, type, bytes(body, 'ascii'), b'')
+    return struct.pack(PACKET_FMT.format(length + 1), 10 + length, client_id, type, body.encode('ascii'), b'')
 
 def unpack_length(buf):
     return struct.unpack('<i', buf)[0]

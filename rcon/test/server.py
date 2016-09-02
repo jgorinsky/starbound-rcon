@@ -47,6 +47,3 @@ class RconServer(asyncore.dispatcher):
     def stop(self):
         self.close()
         self.thread.join()
-
-if __name__ == '__main__':
-    run()
