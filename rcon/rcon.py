@@ -27,7 +27,7 @@ def main():
     # Receive SERVERDATA_AUTH
     receive_packet(s)
     # Send command
-    s.send(make_buf(SERVERDATA_EXECCOMMAND, 'help'))
+    s.send(make_buf(SERVERDATA_EXECCOMMAND, 'deaths'))
     # Receive command response
     receive_packet(s)
 
