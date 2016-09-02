@@ -8,31 +8,56 @@ logger = logging.getLogger(__name__)
 SERVER = ('', 21026)
 PASS = ''
 
-CLIENT_ID = 42
+DEFAULT_CLIENT_ID = 42
 
 SERVERDATA_AUTH = 3
 SERVERDATA_EXECCOMMAND = 2
+SERVERDATA_AUTH_RESPONSE = 2
 SERVERDATA_RESPONSE_VALUE = 0
 
-FMT = '<iii{0}ss'
+PACKET_FMT = '<iii{0}ss'
 
-def main():
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+class Packet:
+    def __init__(self, id, type, body):
+        self.id = id
+        self.type = type
+        self.body = body
+    def __str__(self):
+        return '<ID: %s, Type: %s, Body: %s>' % (self.id, self.type, self.body)
 
-    s.connect(SERVER)
+class Rcon:
+    def __init__(self, server, port, password, client_id=DEFAULT_CLIENT_ID):
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock.connect((server, port))
+        self.client_id = client_id
+        authenticate(self.sock, password, client_id)
+
+    def send(self, command):
+        packet = send(self.sock, self.client_id, command)
+        return packet.body
+
+def send(sock, client_id, command):
+    sock.send(make_buf(SERVERDATA_EXECCOMMAND, client_id, command))
+    packet = receive_packet(sock)
+    assert packet.type == SERVERDATA_RESPONSE_VALUE
+    assert packet.id == client_id
+    return packet
+
+def authenticate(sock, password, client_id):
     # Start auth
-    s.send(make_buf(SERVERDATA_AUTH, PASS))
+    sock.send(make_buf(SERVERDATA_AUTH, client_id, password))
     # Receive empty SERVERDATA_RESPONSE_VALUE
-    receive_packet(s)
+    empty_pack = receive_packet(sock)
+
+    if empty_pack.id == -1:
+        raise Exception('Authentication error')
+    assert empty_pack.type == SERVERDATA_RESPONSE_VALUE
+    assert empty_pack.body == ''
+
     # Receive SERVERDATA_AUTH
-    receive_packet(s)
-    # Send command
-    s.send(make_buf(SERVERDATA_EXECCOMMAND, 'deaths'))
-    # Receive command response
-    receive_packet(s)
-
-    s.close()
-
+    auth_pack = receive_packet(sock)
+    assert auth_pack.type == SERVERDATA_AUTH_RESPONSE
+    assert auth_pack.id == client_id
 
 def receive_packet(s):
     length = unpack_length(s.recv(4))
@@ -42,9 +67,9 @@ def receive_packet(s):
     return packet
 
 
-def make_buf(type, body):
+def make_buf(type, client_id, body):
     length = len(body)
-    return struct.pack(FMT.format(length + 1), 10 + length, CLIENT_ID, type, bytes(body, 'ascii'), b'')
+    return struct.pack(PACKET_FMT.format(length + 1), 10 + length, client_id, type, bytes(body, 'ascii'), b'')
 
 def unpack_length(buf):
     return struct.unpack('<i', buf)[0]
@@ -52,8 +77,4 @@ def unpack_length(buf):
 def unpack(buf, body_length):
     logger.debug(buf)
     id, type, body, nil = struct.unpack('<ii{0}ss'.format(body_length), buf)
-    logger.debug('%s %s %s', id, type, body)
-    return { 'id': id, 'type': type, 'body': body[0:-1].decode('ascii') }
-
-if __name__ == '__main__':
-    main()
+    return Packet(id, type, body[0:-1].decode('ascii'))
