@@ -1,8 +1,9 @@
 import logging
 import socket
 import struct
+import argparse
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.WARN)
 logger = logging.getLogger(__name__)
 
 DEFAULT_CLIENT_ID = 42
@@ -78,3 +79,16 @@ def unpack(buf, body_length):
     logger.debug(buf)
     id, type, body, nil = struct.unpack('<ii{0}ss'.format(body_length), buf)
     return Packet(id, type, body[0:-1].decode('ascii'))
+
+def parseOpts():
+    parser = argparse.ArgumentParser(description='Send a command to a Starbound RCON server')
+    parser.add_argument('--server', '-s', metavar='server', help='RCON server url')
+    parser.add_argument('--port', '-P', metavar='port', type=int, default=21026, help='RCON server port')
+    parser.add_argument('--password', '-p', metavar='password', help='RCON server password')
+    parser.add_argument('command', help='command to send to the server')
+    return vars(parser.parse_args())
+
+def main():
+    opts = parseOpts()
+    rcon = Rcon(opts['server'], opts['port'], opts['password'])
+    print(rcon.send(opts['command']))

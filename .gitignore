@@ -83,7 +83,7 @@ celerybeat-schedule
 .venv/
 venv/
 ENV/
-bin/
+bin/**
 include/
 pyvenv.cfg
 
@@ -92,3 +92,6 @@ pyvenv.cfg
 
 # Rope project settings
 .ropeproject
+
+#starbound-rcon
+!bin/rcon

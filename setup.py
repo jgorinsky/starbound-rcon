@@ -1,5 +1,5 @@
 from __future__ import print_function
-from setuptools import setuptools, find_packages
+from setuptools import setup, find_packages
 
 import rcon
 
