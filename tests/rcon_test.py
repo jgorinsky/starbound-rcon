@@ -22,11 +22,11 @@ class RconTest(unittest.TestCase):
     def test_send(self):
         rcon = Rcon(HOST, PORT, PASSWORD)
         response = rcon.send('help')
-        self.assertIn('test response', response)
+        self.assertTrue('test response' in response)
         rcon.close()
 
     def test_main(self):
         response = rcon_main(['--password', PASSWORD, '--server', HOST, '--port', str(PORT), 'test-server'])
-        self.assertIn('test response', response)
+        self.assertTrue('test response' in response)
 
 
