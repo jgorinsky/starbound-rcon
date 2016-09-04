@@ -18,5 +18,6 @@ setup(
     author_email='gorinsky@gmail.com',
     url='https://github.com/jgorinsky/starbound-rcon',
     license=license,
-    packages=find_packages(exclude=('tests','docs'))
+    packages=find_packages(exclude=('tests','docs')),
+    scripts=['bin/rcon']
 )
