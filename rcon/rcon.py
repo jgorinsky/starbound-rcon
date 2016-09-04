@@ -92,3 +92,4 @@ def main():
     opts = parseOpts()
     rcon = Rcon(opts['server'], opts['port'], opts['password'])
     print(rcon.send(opts['command']))
+    rcon.close()
