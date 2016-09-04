@@ -80,16 +80,17 @@ def unpack(buf, body_length):
     id, type, body, nil = struct.unpack('<ii{0}ss'.format(body_length), buf)
     return Packet(id, type, body[0:-1].decode('ascii'))
 
-def parseOpts():
+def parse_args(args):
     parser = argparse.ArgumentParser(description='Send a command to a Starbound RCON server')
     parser.add_argument('--server', '-s', metavar='server', help='RCON server url')
     parser.add_argument('--port', '-P', metavar='port', type=int, default=21026, help='RCON server port')
     parser.add_argument('--password', '-p', metavar='password', help='RCON server password')
     parser.add_argument('command', help='command to send to the server')
-    return vars(parser.parse_args())
+    return vars(parser.parse_args(args))
 
-def main():
-    opts = parseOpts()
+def main(args):
+    opts = parse_args(args)
     rcon = Rcon(opts['server'], opts['port'], opts['password'])
-    print(rcon.send(opts['command']))
+    response = rcon.send(opts['command'])
     rcon.close()
+    return response

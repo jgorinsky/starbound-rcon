@@ -1,6 +1,8 @@
 import unittest
-from rcon import Rcon
+from rcon import Rcon, main as rcon_main
 from .server import RconServer, HOST, PORT
+
+PASSWORD = 'password'
 
 class RconTest(unittest.TestCase):
 
@@ -14,10 +16,17 @@ class RconTest(unittest.TestCase):
         cls.server.stop()
 
     def test_auth(self):
-        rcon = Rcon(HOST, PORT, 'password')
+        rcon = Rcon(HOST, PORT, PASSWORD)
         rcon.close()
 
     def test_send(self):
-        rcon = Rcon(HOST, PORT, 'password')
-        rcon.send('help')
+        rcon = Rcon(HOST, PORT, PASSWORD)
+        response = rcon.send('help')
+        self.assertIn('test response', response)
         rcon.close()
+
+    def test_main(self):
+        response = rcon_main(['--password', PASSWORD, '--server', HOST, '--port', str(PORT), 'test-server'])
+        self.assertIn('test response', response)
+
+
