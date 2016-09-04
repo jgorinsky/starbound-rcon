@@ -1,6 +1,6 @@
 import unittest
 from rcon import Rcon
-from rcon.test.server import RconServer, HOST, PORT
+from .server import RconServer, HOST, PORT
 
 class RconTest(unittest.TestCase):
 
