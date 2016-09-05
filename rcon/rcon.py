@@ -76,7 +76,6 @@ def unpack_length(buf):
     return struct.unpack('<i', buf)[0]
 
 def unpack(buf, body_length):
-    logger.debug(buf)
     id, type, body, nil = struct.unpack('<ii{0}ss'.format(body_length), buf)
     return Packet(id, type, body[0:-1].decode('ascii'))
 
