@@ -2,6 +2,7 @@
 
 import sys
 from rcon import main
+from __future__ import print_function
 
 if __name__ == '__main__':
     print(main(sys.argv[1:]))
